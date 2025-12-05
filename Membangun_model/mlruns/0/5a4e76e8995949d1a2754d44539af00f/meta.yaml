@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/5a4e76e8995949d1a2754d44539af00f/artifacts
+end_time: 1764907142453
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5a4e76e8995949d1a2754d44539af00f
+run_name: Basic_Model
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764907131374
+status: 3
+tags: []
+user_id: mirza
