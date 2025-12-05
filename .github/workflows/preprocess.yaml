@@ -30,7 +30,7 @@ jobs:
 
     # 5. Upload Hasil (Advance Requirement)
     - name: Upload Processed Data
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: data-ready-to-train
         path: preprocessing/train_preprocessing.csv
