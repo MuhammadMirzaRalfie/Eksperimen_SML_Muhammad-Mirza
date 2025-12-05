@@ -1,0 +1,36 @@
+name: Mirza Preprocessing Automation
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  preprocess-job:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Ambil kode
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # 2. Setup Python
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    # 3. Install Requirements
+    - name: Install Dependencies
+      run: |
+        pip install pandas numpy scikit-learn
+
+    # 4. Jalankan Script (Perhatikan Path-nya!)
+    - name: Run Automate Script
+      run: python preprocessing/automate_Mirza.py
+
+    # 5. Upload Hasil (Advance Requirement)
+    - name: Upload Processed Data
+      uses: actions/upload-artifact@v3
+      with:
+        name: data-ready-to-train
+        path: preprocessing/train_preprocessing.csv
