@@ -9,18 +9,31 @@ from sklearn.metrics import accuracy_score
 
 def load_data(path):
     df = pd.read_csv(path)
+
+    # Cek kolom y ada atau tidak
+    if "y" not in df.columns:
+        raise ValueError("Kolom 'y' tidak ditemukan dalam dataset.")
+
     return df
 
 
 def train_model(df):
+    # Pisahkan fitur dan target
     X = df.drop("y", axis=1)
     y = df["y"]
 
+    # Split data
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
+        X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    model = RandomForestClassifier(n_estimators=150, random_state=42)
+    # Model
+    model = RandomForestClassifier(
+        n_estimators=150,
+        random_state=42,
+        n_jobs=-1
+    )
+
     model.fit(X_train, y_train)
 
     preds = model.predict(X_test)
@@ -39,7 +52,10 @@ if __name__ == "__main__":
     with mlflow.start_run():
         model, acc = train_model(df)
 
+        # Log metrics
         mlflow.log_metric("accuracy", acc)
-        mlflow.sklearn.log_model(model, "model")
+
+        # Log model
+        mlflow.sklearn.log_model(model, artifact_path="model")
 
         print("Training completed. Accuracy:", acc)
