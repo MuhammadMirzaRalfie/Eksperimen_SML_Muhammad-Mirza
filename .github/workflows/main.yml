@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
     - name: Checkout repository
       uses: actions/checkout@v4
 
@@ -30,21 +31,22 @@ jobs:
         which mlflow || echo "mlflow NOT FOUND"
         conda list | grep mlflow || echo "mlflow not installed?"
 
-    - name: Run MLflow Project Train Job
+    - name: Run MLflow Project
       shell: bash -l {0}
       env:
-        MLFLOW_TRACKING_URI: ./mlruns
+        MLFLOW_TRACKING_URI: ./Workflow-CI/MLProject/mlruns
       run: |
         conda activate modelling-env
-        mlflow run Workflow-CI/MLProject
+        cd Workflow-CI/MLProject
+        mlflow run .
 
     - name: Locate MLflow Model Path
       id: find_model
       shell: bash -l {0}
       run: |
         conda activate modelling-env
-        LAST_MODEL=$(find mlruns -type d -path "*/artifacts/model" | tail -n 1)
-        echo "model_path=$LAST_MODEL" >> $GITHUB_OUTPUT
+        MODEL_PATH=$(find Workflow-CI/MLProject/mlruns -type d -path "*/artifacts/model" | tail -n 1)
+        echo "model_path=$MODEL_PATH" >> $GITHUB_OUTPUT
 
     - name: Upload Model Artifact
       uses: actions/upload-artifact@v4
