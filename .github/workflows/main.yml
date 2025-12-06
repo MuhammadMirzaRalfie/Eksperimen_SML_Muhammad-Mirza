@@ -10,9 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+    # 1. Checkout
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # 2. Install Miniconda + environment
     - name: Install Miniconda
       uses: conda-incubator/setup-miniconda@v3
       with:
@@ -21,6 +24,7 @@ jobs:
         environment-file: Workflow-CI/MLProject/conda.yaml
         python-version: "3.10"
 
+    # 3. Verify environment
     - name: Verify environment
       shell: bash -l {0}
       run: |
@@ -30,45 +34,49 @@ jobs:
         mlflow --version || echo "mlflow NOT FOUND"
         conda list | grep mlflow || echo "mlflow not installed?"
 
+    # 4. Run MLflow Project
     - name: Run MLflow Project
-  shell: bash -l {0}
-  env:
-    MLFLOW_TRACKING_URI: "${GITHUB_WORKSPACE}/Workflow-CI/MLProject/mlruns"
-  run: |
-    conda activate modelling-env
-    cd Workflow-CI/MLProject
-    mlflow run .
+      shell: bash -l {0}
+      env:
+        MLFLOW_TRACKING_URI: "${GITHUB_WORKSPACE}/Workflow-CI/MLProject/mlruns"
+      run: |
+        conda activate modelling-env
+        cd Workflow-CI/MLProject
+        mlflow run .
 
-- name: Locate MLflow Model Path
-  id: find_model
-  shell: bash -l {0}
-  run: |
-    conda activate modelling-env
-    SEARCH_PATH="${GITHUB_WORKSPACE}/Workflow-CI/MLProject/mlruns"
-    echo "Searching in: $SEARCH_PATH"
+    # 5. Locate model path
+    - name: Locate MLflow Model Path
+      id: find_model
+      shell: bash -l {0}
+      run: |
+        conda activate modelling-env
+        SEARCH_PATH="${GITHUB_WORKSPACE}/Workflow-CI/MLProject/mlruns"
+        echo "Searching in: $SEARCH_PATH"
 
-    MODEL_PATH=$(find "$SEARCH_PATH" -type d -path "*/artifacts/model" | tail -n 1)
+        MODEL_PATH=$(find "$SEARCH_PATH" -type d -path "*/artifacts/model" | tail -n 1)
 
-    if [ -z "$MODEL_PATH" ]; then
-      echo "Model tidak ditemukan. Isi folder:"
-      find "$SEARCH_PATH" -maxdepth 5
-      exit 1
-    fi
+        if [ -z "$MODEL_PATH" ]; then
+          echo "Model tidak ditemukan. Isi folder mlruns:"
+          find "$SEARCH_PATH" -maxdepth 5
+          exit 1
+        fi
 
-    echo "model_path=$MODEL_PATH" >> $GITHUB_OUTPUT
-    echo "Found model at: $MODEL_PATH"
+        echo "model_path=$MODEL_PATH" >> $GITHUB_OUTPUT
+        echo "Found model at: $MODEL_PATH"
 
-
+    # 6. Upload model artifact
     - name: Upload Model Artifact
       uses: actions/upload-artifact@v4
       with:
         name: trained-model
         path: ${{ steps.find_model.outputs.model_path }}
 
+    # 7. Login Docker Hub
     - name: Login to Docker Hub
       run: |
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
+    # 8. Build Docker Image
     - name: Build Docker Image
       shell: bash -l {0}
       run: |
@@ -77,6 +85,7 @@ jobs:
           -m "${{ steps.find_model.outputs.model_path }}" \
           -n "${{ secrets.DOCKERHUB_USERNAME }}/workflow-ci-model:latest"
 
+    # 9. Push Docker Image
     - name: Push Docker Image
       run: |
         docker push "${{ secrets.DOCKERHUB_USERNAME }}/workflow-ci-model:latest"
