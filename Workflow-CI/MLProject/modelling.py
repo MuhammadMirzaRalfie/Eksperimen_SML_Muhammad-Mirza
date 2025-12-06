@@ -5,6 +5,7 @@ import sys
 import argparse
 import mlflow
 import mlflow.sklearn
+import yaml  # <--- Tambahan import
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -42,6 +43,16 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Training
 mlflow.set_experiment("Eksperimen_RF_Automated")
 
+# --- PERBAIKAN: BACA CONDA.YAML SECARA EKSPLISIT ---
+# Ini mencegah MLflow menebak versi python (yang sering salah tebak jadi 3.8)
+conda_env_path = "conda.yaml"
+if os.path.exists(conda_env_path):
+    with open(conda_env_path, "r") as f:
+        conda_env = yaml.safe_load(f)
+else:
+    print("[WARNING] conda.yaml tidak ditemukan, menggunakan default environment.")
+    conda_env = None
+
 with mlflow.start_run() as run:
     mlflow.log_param("n_estimators", args.n_estimators)
     mlflow.log_param("max_depth", args.max_depth)
@@ -57,7 +68,9 @@ with mlflow.start_run() as run:
     acc = accuracy_score(y_test, y_pred)
     
     mlflow.log_metric("accuracy", acc)
-    mlflow.sklearn.log_model(model, "model")
+    
+    # --- UPDATE: TEMPELKAN CONDA_ENV KE MODEL ---
+    mlflow.sklearn.log_model(model, "model", conda_env=conda_env)
 
-    # Important: Print Run ID for CI/CD capture
+    # Print Run ID for CI/CD capture
     print(f"[INFO] Run ID saved: {run.info.run_id}")
