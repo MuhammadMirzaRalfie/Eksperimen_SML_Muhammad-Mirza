@@ -10,72 +10,55 @@ env:
   MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
   MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
   DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-  REPO_NAME: eksperimen-sml-mirza  
+  REPO_NAME: eksperimen-sml-mirza
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Checkout Code
-    - name: Run actions/checkout@v3
+    - name: Checkout Code
       uses: actions/checkout@v3
 
-    # 2. Setup Python
     - name: Set up Python 3.9
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
-    # 3. Install Dependencies
     - name: Install dependencies
       run: |
         pip install mlflow==2.14.1 dagshub pandas scikit-learn matplotlib seaborn virtualenv
 
-    # 4 & 5  Jalankan MLflow dan Tangkap ID dari Log
     - name: Run MLflow & Capture ID
-      id: get_run  
+      id: get_run
       run: |
-        cd Workflow-CI/MLProject
+        cd Workflow-CI/MLProject || cd MLProject
         
         mlflow run . --env-manager=local --experiment-name "Eksperimen_RF_Automated" > output.log 2>&1
-        
-      
         cat output.log
+        
         RUN_ID=$(grep "Run ID saved:" output.log | awk '{print $NF}')
         
-        
         if [ -z "$RUN_ID" ]; then
-          echo "ERROR: Tidak bisa menemukan Run ID. Pastikan modelling.py sudah diperbarui."
+          echo "ERROR: Run ID not found."
           exit 1
         fi
         
-        echo "SUKSES! Run ID ditemukan: $RUN_ID"
-        
         echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
-    # 6. Build Docker Model 
     - name: Build Docker Model
       run: |
-        echo "Building Docker Image from Run ID: ${{ steps.get_run.outputs.run_id }}"
-        # Membungkus model hasil training menjadi Docker Image siap pakai
         mlflow models build-docker --model-uri "runs:/${{ steps.get_run.outputs.run_id }}/model" --name ${{ env.REPO_NAME }}
 
-    # 7. Login ke Docker Hub
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # 8. Tag Docker Image
-    - name: Tag Docker Image
+    - name: Push Docker Image
       run: |
         docker tag ${{ env.REPO_NAME }} ${{ env.DOCKER_USER }}/${{ env.REPO_NAME }}:latest
         docker tag ${{ env.REPO_NAME }} ${{ env.DOCKER_USER }}/${{ env.REPO_NAME }}:${{ github.sha }}
-
-    # 9. Push Docker Image ke Docker Hub
-    - name: Push Docker Image
-      run: |
         docker push ${{ env.DOCKER_USER }}/${{ env.REPO_NAME }}:latest
         docker push ${{ env.DOCKER_USER }}/${{ env.REPO_NAME }}:${{ github.sha }}
