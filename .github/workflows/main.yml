@@ -22,24 +22,24 @@ jobs:
         auto-activate-base: false
 
     - name: Verify environment
-      shell: bash
+      shell: bash -l {0}
       run: |
         conda info
         conda list
         which python
+        python -c "import mlflow; print('MLflow OK')"
 
     - name: Run MLflow Project (Training)
-      shell: bash
+      working-directory: Workflow-CI/MLProject
+      shell: bash -l {0}
       run: |
-        cd Workflow-CI/MLProject
         python -m mlflow run .
 
     - name: Find latest MLflow model artifact
       id: findmodel
-      shell: bash
+      shell: bash -l {0}
       run: |
         LAST_MODEL=$(find mlruns -type d -path "*/artifacts/model" | tail -n 1)
-        echo "Model path: $LAST_MODEL"
         echo "model_path=$LAST_MODEL" >> $GITHUB_OUTPUT
 
     - name: Upload Model Artifact
@@ -49,18 +49,18 @@ jobs:
         path: ${{ steps.findmodel.outputs.model_path }}
 
     - name: Login to Docker Hub
-      shell: bash
+      shell: bash -l {0}
       run: |
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
     - name: Build Docker Image using MLflow
-      shell: bash
+      shell: bash -l {0}
       run: |
         mlflow models build-docker \
           -m ${{ steps.findmodel.outputs.model_path }} \
           -n "${{ secrets.DOCKERHUB_USERNAME }}/workflow-ci-model:latest"
 
     - name: Push Docker Image to Docker Hub
-      shell: bash
+      shell: bash -l {0}
       run: |
         docker push "${{ secrets.DOCKERHUB_USERNAME }}/workflow-ci-model:latest"
