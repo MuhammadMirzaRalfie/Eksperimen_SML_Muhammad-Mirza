@@ -27,13 +27,13 @@ jobs:
         conda activate modelling-env
         which python
         python --version
-        which mlflow || echo "mlflow NOT FOUND"
+        mlflow --version || echo "mlflow NOT FOUND"
         conda list | grep mlflow || echo "mlflow not installed?"
 
     - name: Run MLflow Project
       shell: bash -l {0}
       env:
-        MLFLOW_TRACKING_URI: ./Workflow-CI/MLProject/mlruns
+        MLFLOW_TRACKING_URI: ${{ github.workspace }}/Workflow-CI/MLProject/mlruns
       run: |
         conda activate modelling-env
         cd Workflow-CI/MLProject
@@ -44,8 +44,16 @@ jobs:
       shell: bash -l {0}
       run: |
         conda activate modelling-env
-        MODEL_PATH=$(find Workflow-CI/MLProject/mlruns -type d -path "*/artifacts/model" | tail -n 1)
+        SEARCH_PATH="${GITHUB_WORKSPACE}/Workflow-CI/MLProject/mlruns"
+        MODEL_PATH=$(find "$SEARCH_PATH" -type d -path "*/artifacts/model" | tail -n 1)
+
+        if [ -z "$MODEL_PATH" ]; then
+          echo "No MLflow model found."
+          exit 1
+        fi
+
         echo "model_path=$MODEL_PATH" >> $GITHUB_OUTPUT
+        echo "Found model at: $MODEL_PATH"
 
     - name: Upload Model Artifact
       uses: actions/upload-artifact@v4
