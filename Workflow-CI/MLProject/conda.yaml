@@ -1,14 +1,21 @@
 name: modelling-env
 
 channels:
-  - defaults
   - conda-forge
+  - defaults
 
 dependencies:
   - python=3.10
   - numpy
   - pandas
   - scikit-learn
+  - scipy
+  - matplotlib
+  - seaborn
+  - jupyter
   - pip
   - pip:
       - mlflow
+      - joblib
+      - pyarrow
+      - optuna

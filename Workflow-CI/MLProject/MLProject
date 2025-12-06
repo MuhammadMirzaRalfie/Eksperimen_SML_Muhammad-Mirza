@@ -6,5 +6,6 @@ entry_points:
   main:
     parameters:
       data_path: {type: str, default: "train_preprocessing.csv"}
+      target: {type: str, default: "y"}
       model_output: {type: str, default: "model_output"}
-    command: "python modelling.py --data_path {data_path} --model_output {model_output}"
+    command: "python modelling.py --data_path {data_path} --target {target} --model_output {model_output}"

@@ -7,10 +7,16 @@ from sklearn.metrics import accuracy_score
 import mlflow
 import mlflow.sklearn
 
+
 def main(args):
+    # Pastikan MLflow menyimpan runs ke folder lokal MLProject/mlruns
+    tracking_path = os.path.abspath("mlruns")
+    mlflow.set_tracking_uri(f"file://{tracking_path}")
+
     # Load dataset
     df = pd.read_csv(args.data_path)
 
+    # Split input-target
     X = df.drop(args.target, axis=1)
     y = df[args.target]
 
@@ -18,27 +24,32 @@ def main(args):
         X, y, test_size=0.2, random_state=42
     )
 
+    # Autolog untuk log otomatis parameter, metric, model, confusion matrix, dll
     mlflow.sklearn.autolog()
 
     with mlflow.start_run(run_name="Auto_Retrain"):
-        model = RandomForestClassifier(n_estimators=50, random_state=42)
-        model.fit(X_train, y_train)
+        model = RandomForestClassifier(
+            n_estimators=50,
+            random_state=42
+        )
 
+        model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
+
         acc = accuracy_score(y_test, y_pred)
         mlflow.log_metric("accuracy_manual", acc)
 
-        # Pastikan folder output ada
+        # Output directory (manual save)
         os.makedirs(args.model_output, exist_ok=True)
 
-        # Simpan model ke MLflow format
         mlflow.sklearn.save_model(
             sk_model=model,
             path=args.model_output
         )
 
-        print(f"Model saved to: {args.model_output}")
-        print(f"Accuracy: {acc}")
+        print(f"[INFO] Model saved to: {args.model_output}")
+        print(f"[INFO] Accuracy: {acc}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -49,14 +60,12 @@ if __name__ == "__main__":
         required=True,
         help="Path ke dataset preprocessing"
     )
-
     parser.add_argument(
         "--target",
         type=str,
         default="y",
         help="Nama kolom target"
     )
-
     parser.add_argument(
         "--model_output",
         type=str,

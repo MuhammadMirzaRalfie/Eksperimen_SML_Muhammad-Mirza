@@ -22,45 +22,36 @@ jobs:
         auto-activate-base: false
 
     - name: Verify environment
-      shell: bash -l {0}
       run: |
         conda info
         conda list
-        which python
-        python -c "import mlflow; print('MLflow OK')"
 
-    - name: Run MLflow Project (Training)
-      working-directory: Workflow-CI/MLProject
-      shell: bash -l {0}
+    - name: Run MLflow Project Train Job
       run: |
-        python -m mlflow run .
+        mlflow run Workflow-CI/MLProject
 
-    - name: Find latest MLflow model artifact
-      id: findmodel
-      shell: bash -l {0}
+    - name: Locate MLflow Model Path
+      id: find_model
       run: |
-        LAST_MODEL=$(find mlruns -type d -path "*/artifacts/model" | tail -n 1)
+        LAST_MODEL=$(find Workflow-CI/MLProject/mlruns -type d -path "*/artifacts/model" | tail -n 1)
         echo "model_path=$LAST_MODEL" >> $GITHUB_OUTPUT
 
     - name: Upload Model Artifact
       uses: actions/upload-artifact@v4
       with:
         name: trained-model
-        path: ${{ steps.findmodel.outputs.model_path }}
+        path: ${{ steps.find_model.outputs.model_path }}
 
     - name: Login to Docker Hub
-      shell: bash -l {0}
       run: |
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
     - name: Build Docker Image using MLflow
-      shell: bash -l {0}
       run: |
         mlflow models build-docker \
-          -m ${{ steps.findmodel.outputs.model_path }} \
+          -m "${{ steps.find_model.outputs.model_path }}" \
           -n "${{ secrets.DOCKERHUB_USERNAME }}/workflow-ci-model:latest"
 
     - name: Push Docker Image to Docker Hub
-      shell: bash -l {0}
       run: |
         docker push "${{ secrets.DOCKERHUB_USERNAME }}/workflow-ci-model:latest"
