@@ -1,15 +1,14 @@
-name: eksperimen_sml_mirza_env
+name: modelling-env
+
 channels:
+  - defaults
   - conda-forge
+
 dependencies:
-  - python=3.9
+  - python=3.10
+  - numpy
+  - pandas
+  - scikit-learn
   - pip
   - pip:
-    - pandas
-    - numpy
-    - scikit-learn
-    - matplotlib
-    - seaborn
-    - mlflow==2.14.1  
-    - dagshub
-    - virtualenv
+      - mlflow

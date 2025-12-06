@@ -1,10 +1,10 @@
-name: Eksperimen_SML_Mirza
+name: workflow-ci-model
 
 conda_env: conda.yaml
 
 entry_points:
   main:
     parameters:
-      n_estimators: {type: int, default: 100}
-      max_depth: {type: int, default: 10}
-    command: "python modelling.py --n_estimators {n_estimators} --max_depth {max_depth}"
+      data_path: {type: str, default: "train_preprocessing.csv"}
+      model_output: {type: str, default: "model_output"}
+    command: "python modelling.py --data_path {data_path} --model_output {model_output}"
