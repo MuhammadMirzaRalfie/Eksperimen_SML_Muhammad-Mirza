@@ -10,5 +10,6 @@ dependencies:
     - scikit-learn
     - matplotlib
     - seaborn
-    - mlflow
+    - mlflow==2.14.1  
     - dagshub
+    - virtualenv
