@@ -7,16 +7,16 @@ from sklearn.metrics import accuracy_score
 import mlflow
 import mlflow.sklearn
 
-
 def main(args):
-    # Pastikan MLflow menyimpan runs ke folder lokal MLProject/mlruns
-    tracking_path = os.path.abspath("mlruns")
-    mlflow.set_tracking_uri(f"file://{tracking_path}")
+    # Set tracking URI lokal agar konsisten di GitHub Actions
+    mlflow.set_tracking_uri("mlruns")
+    mlflow.set_experiment("training-experiment")
 
-    # Load dataset
+    # Optional tapi recommended
+    mlflow.sklearn.autolog()
+
     df = pd.read_csv(args.data_path)
 
-    # Split input-target
     X = df.drop(args.target, axis=1)
     y = df[args.target]
 
@@ -24,22 +24,19 @@ def main(args):
         X, y, test_size=0.2, random_state=42
     )
 
-    # Autolog untuk log otomatis parameter, metric, model, confusion matrix, dll
-    mlflow.sklearn.autolog()
-
-    with mlflow.start_run(run_name="Auto_Retrain"):
+    with mlflow.start_run(run_name="training") as run:
         model = RandomForestClassifier(
             n_estimators=50,
             random_state=42
         )
 
         model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
 
+        y_pred = model.predict(X_test)
         acc = accuracy_score(y_test, y_pred)
+
         mlflow.log_metric("accuracy_manual", acc)
 
-        # Output directory (manual save)
         os.makedirs(args.model_output, exist_ok=True)
 
         mlflow.sklearn.save_model(
@@ -47,31 +44,13 @@ def main(args):
             path=args.model_output
         )
 
-        print(f"[INFO] Model saved to: {args.model_output}")
-        print(f"[INFO] Accuracy: {acc}")
-
+        print(f"Training completed. Model saved at: {args.model_output}")
+        print("MLflow Run ID:", run.info.run_id)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "--data_path",
-        type=str,
-        required=True,
-        help="Path ke dataset preprocessing"
-    )
-    parser.add_argument(
-        "--target",
-        type=str,
-        default="y",
-        help="Nama kolom target"
-    )
-    parser.add_argument(
-        "--model_output",
-        type=str,
-        required=True,
-        help="Folder output untuk menyimpan model MLflow"
-    )
-
+    parser.add_argument("--data_path", type=str, required=True)
+    parser.add_argument("--target", type=str, default="y")
+    parser.add_argument("--model_output", type=str, required=True)
     args = parser.parse_args()
     main(args)
