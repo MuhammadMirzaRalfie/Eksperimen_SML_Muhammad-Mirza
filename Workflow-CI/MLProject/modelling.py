@@ -1,72 +1,67 @@
-import mlflow
-import mlflow.sklearn
+import argparse
+import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-import argparse
-import os
-
-
-def load_data(path):
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Dataset tidak ditemukan: {path}")
-    df = pd.read_csv(path)
-    return df
-
-
-def train_model(df, target_col):
-    X = df.drop(columns=[target_col])
-    y = df[target_col]
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
-    )
-
-    model = RandomForestClassifier(
-        n_estimators=200,
-        max_depth=10,
-        random_state=42
-    )
-
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-
-    acc = accuracy_score(y_test, y_pred)
-    return model, acc
-
+import mlflow
+import mlflow.sklearn
 
 def main(args):
-    mlflow.set_experiment("workflow-ci-model")
+    # Load dataset
+    df = pd.read_csv(args.data_path)
 
-    with mlflow.start_run():
-        df = load_data(args.data_path)
+    X = df.drop(args.target, axis=1)
+    y = df[args.target]
 
-        mlflow.log_param("target", args.target)
-        mlflow.log_param("dataset_rows", len(df))
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
-        model, acc = train_model(df, args.target)
+    mlflow.sklearn.autolog()
 
-        mlflow.log_metric("accuracy", acc)
+    with mlflow.start_run(run_name="Auto_Retrain"):
+        model = RandomForestClassifier(n_estimators=50, random_state=42)
+        model.fit(X_train, y_train)
 
-        mlflow.sklearn.log_model(model, artifact_path="model")
+        y_pred = model.predict(X_test)
+        acc = accuracy_score(y_test, y_pred)
+        mlflow.log_metric("accuracy_manual", acc)
 
-        print(f"Akurasi model: {acc:.4f}")
+        # Pastikan folder output ada
+        os.makedirs(args.model_output, exist_ok=True)
 
+        # Simpan model ke MLflow format
+        mlflow.sklearn.save_model(
+            sk_model=model,
+            path=args.model_output
+        )
+
+        print(f"Model saved to: {args.model_output}")
+        print(f"Accuracy: {acc}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Training Model CI MLflow")
+    parser = argparse.ArgumentParser()
+
     parser.add_argument(
         "--data_path",
         type=str,
-        default="train_preprocessing.csv",
-        help="Path dataset hasil preprocessing"
+        required=True,
+        help="Path ke dataset preprocessing"
     )
+
     parser.add_argument(
         "--target",
         type=str,
-        default="y", 
+        default="y",
         help="Nama kolom target"
+    )
+
+    parser.add_argument(
+        "--model_output",
+        type=str,
+        required=True,
+        help="Folder output untuk menyimpan model MLflow"
     )
 
     args = parser.parse_args()
