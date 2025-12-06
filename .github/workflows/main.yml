@@ -32,23 +32,23 @@ jobs:
       run: |
         pip install mlflow dagshub pandas scikit-learn matplotlib seaborn virtualenv
 
-    # 4. Run MLflow Project (Training Otomatis)
+    # 4. Run MLflow Project ]
     - name: Run mlflow project
       run: |
-        cd MLProject
-        # Menjalankan training. Outputnya akan terekam di DagsHub.
+        cd workflow-CI/MLProject
+        
         mlflow run . --no-conda --experiment-name "Eksperimen_RF_Automated"
 
     # 5. Get Latest Run ID 
     - name: Get latest MLflow run_id
       id: get_run
       run: |
-        # Script ini mencari ID dari run terakhir di eksperimen "Eksperimen_RF_Automated"
+        
         RUN_ID=$(mlflow runs list --experiment-id $(mlflow experiments search --view active_only | grep "Eksperimen_RF_Automated" | awk '{print $1}') | head -n 3 | tail -n 1 | awk '{print $4}')
         echo "Detected Run ID: $RUN_ID"
         echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
-    # 6. Build Docker Model (Syarat Advance)
+    # 6. Build Docker Model 
     - name: Build Docker Model
       run: |
         echo "Building Docker Image from Run ID: ${{ steps.get_run.outputs.run_id }}"
