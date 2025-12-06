@@ -31,29 +31,33 @@ jobs:
         conda list | grep mlflow || echo "mlflow not installed?"
 
     - name: Run MLflow Project
-      shell: bash -l {0}
-      env:
-        MLFLOW_TRACKING_URI: ${{ github.workspace }}/Workflow-CI/MLProject/mlruns
-      run: |
-        conda activate modelling-env
-        cd Workflow-CI/MLProject
-        mlflow run .
+  shell: bash -l {0}
+  env:
+    MLFLOW_TRACKING_URI: "${GITHUB_WORKSPACE}/Workflow-CI/MLProject/mlruns"
+  run: |
+    conda activate modelling-env
+    cd Workflow-CI/MLProject
+    mlflow run .
 
-    - name: Locate MLflow Model Path
-      id: find_model
-      shell: bash -l {0}
-      run: |
-        conda activate modelling-env
-        SEARCH_PATH="${GITHUB_WORKSPACE}/Workflow-CI/MLProject/mlruns"
-        MODEL_PATH=$(find "$SEARCH_PATH" -type d -path "*/artifacts/model" | tail -n 1)
+- name: Locate MLflow Model Path
+  id: find_model
+  shell: bash -l {0}
+  run: |
+    conda activate modelling-env
+    SEARCH_PATH="${GITHUB_WORKSPACE}/Workflow-CI/MLProject/mlruns"
+    echo "Searching in: $SEARCH_PATH"
 
-        if [ -z "$MODEL_PATH" ]; then
-          echo "No MLflow model found."
-          exit 1
-        fi
+    MODEL_PATH=$(find "$SEARCH_PATH" -type d -path "*/artifacts/model" | tail -n 1)
 
-        echo "model_path=$MODEL_PATH" >> $GITHUB_OUTPUT
-        echo "Found model at: $MODEL_PATH"
+    if [ -z "$MODEL_PATH" ]; then
+      echo "Model tidak ditemukan. Isi folder:"
+      find "$SEARCH_PATH" -maxdepth 5
+      exit 1
+    fi
+
+    echo "model_path=$MODEL_PATH" >> $GITHUB_OUTPUT
+    echo "Found model at: $MODEL_PATH"
+
 
     - name: Upload Model Artifact
       uses: actions/upload-artifact@v4
