@@ -39,7 +39,7 @@ jobs:
         # Menjalankan training. Outputnya akan terekam di DagsHub.
         mlflow run . --no-conda --experiment-name "Eksperimen_RF_Automated"
 
-    # 5. Get Latest Run ID (Mengambil ID training barusan untuk dibungkus Docker)
+    # 5. Get Latest Run ID 
     - name: Get latest MLflow run_id
       id: get_run
       run: |
