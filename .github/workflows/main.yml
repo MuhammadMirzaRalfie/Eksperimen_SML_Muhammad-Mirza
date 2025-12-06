@@ -37,7 +37,7 @@ jobs:
       run: |
         cd Workflow-CI/MLProject
         
-        mlflow run . --no-conda --experiment-name "Eksperimen_RF_Automated"
+        mlflow run . --env-manager=local --experiment-name "Eksperimen_RF_Automated"
 
     # 5. Get Latest Run ID 
     - name: Get latest MLflow run_id
