@@ -30,7 +30,7 @@ jobs:
     # 3. Install Dependencies
     - name: Install dependencies
       run: |
-        pip install mlflow dagshub pandas scikit-learn matplotlib seaborn virtualenv
+        pip install mlflow==2.14.1 dagshub pandas scikit-learn matplotlib seaborn virtualenv
 
     # 4. Run MLflow Project ]
     - name: Run mlflow project
