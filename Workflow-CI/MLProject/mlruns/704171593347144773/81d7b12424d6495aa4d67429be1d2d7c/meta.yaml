@@ -1,0 +1,14 @@
+artifact_uri: file:///D:/Asah/SIstemML/Eksperimen_SML_Muhammad-Mirza/Workflow-CI/MLProject/mlruns/704171593347144773/81d7b12424d6495aa4d67429be1d2d7c/artifacts
+end_time: 1765017717557
+entry_point_name: ''
+experiment_id: '704171593347144773'
+lifecycle_stage: active
+run_id: 81d7b12424d6495aa4d67429be1d2d7c
+run_name: training
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765017706790
+status: 3
+tags: []
+user_id: mirza

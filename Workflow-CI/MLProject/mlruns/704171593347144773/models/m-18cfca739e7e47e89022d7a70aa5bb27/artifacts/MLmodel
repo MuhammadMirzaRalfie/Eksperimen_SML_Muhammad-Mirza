@@ -1,0 +1,22 @@
+artifact_path: file:///D:/Asah/SIstemML/Eksperimen_SML_Muhammad-Mirza/Workflow-CI/MLProject/mlruns/704171593347144773/models/m-18cfca739e7e47e89022d7a70aa5bb27/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.2
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.2
+mlflow_version: 3.6.0
+model_id: m-18cfca739e7e47e89022d7a70aa5bb27
+model_size_bytes: 43285404
+model_uuid: m-18cfca739e7e47e89022d7a70aa5bb27
+prompts: null
+run_id: 81d7b12424d6495aa4d67429be1d2d7c
+utc_time_created: '2025-12-06 10:41:49.356030'

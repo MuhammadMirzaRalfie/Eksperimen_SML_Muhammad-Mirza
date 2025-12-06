@@ -1,0 +1,14 @@
+artifact_uri: file:///D:/Asah/SIstemML/Eksperimen_SML_Muhammad-Mirza/Workflow-CI/MLProject/mlruns/0/f64a51b70df44487a3df4d9dffd2c40e/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: f64a51b70df44487a3df4d9dffd2c40e
+run_name: gentle-squid-217
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765017611223
+status: 1
+tags: []
+user_id: mirza
