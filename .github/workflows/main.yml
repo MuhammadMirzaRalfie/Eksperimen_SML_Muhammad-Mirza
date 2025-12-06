@@ -35,7 +35,7 @@ jobs:
     # 4. Run MLflow Project ]
     - name: Run mlflow project
       run: |
-        cd workflow-CI/MLProject
+        cd Workflow-CI/MLProject
         
         mlflow run . --no-conda --experiment-name "Eksperimen_RF_Automated"
 
