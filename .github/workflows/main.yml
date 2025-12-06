@@ -16,23 +16,31 @@ jobs:
     - name: Install Miniconda
       uses: conda-incubator/setup-miniconda@v3
       with:
+        auto-activate-base: false
         activate-environment: ml-env
         environment-file: Workflow-CI/MLProject/conda.yaml
         python-version: "3.10"
-        auto-activate-base: false
 
     - name: Verify environment
+      shell: bash -l {0}
       run: |
-        conda info
-        conda list
+        conda activate ml-env
+        which python
+        python --version
+        which mlflow || echo "mlflow NOT FOUND"
+        conda list | grep mlflow || echo "mlflow not installed?"
 
     - name: Run MLflow Project Train Job
+      shell: bash -l {0}
       run: |
+        conda activate ml-env
         mlflow run Workflow-CI/MLProject
 
     - name: Locate MLflow Model Path
       id: find_model
+      shell: bash -l {0}
       run: |
+        conda activate ml-env
         LAST_MODEL=$(find Workflow-CI/MLProject/mlruns -type d -path "*/artifacts/model" | tail -n 1)
         echo "model_path=$LAST_MODEL" >> $GITHUB_OUTPUT
 
@@ -47,7 +55,9 @@ jobs:
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
     - name: Build Docker Image using MLflow
+      shell: bash -l {0}
       run: |
+        conda activate ml-env
         mlflow models build-docker \
           -m "${{ steps.find_model.outputs.model_path }}" \
           -n "${{ secrets.DOCKERHUB_USERNAME }}/workflow-ci-model:latest"
